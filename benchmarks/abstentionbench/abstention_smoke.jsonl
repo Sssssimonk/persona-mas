@@ -1,0 +1,2 @@
+{"question": "This smoke-test question intentionally lacks enough information. Should you answer it?", "reference_answers": null, "should_abstain": true, "metadata_json": {"source": "smoke"}}
+

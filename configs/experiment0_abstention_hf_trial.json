@@ -1,0 +1,24 @@
+{
+  "backend": "hf_peft",
+  "model_name": "Qwen/Qwen2.5-7B-Instruct",
+  "max_new_tokens": 384,
+  "adapter_paths": {
+    "mathematical": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/mathematical",
+    "goodness": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/goodness",
+    "remorse": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/remorse"
+  },
+  "benchmarks": [
+    {
+      "name": "abstentionbench",
+      "source": "local",
+      "path": "benchmarks/abstentionbench/abstention_trial10.jsonl",
+      "limit": 10
+    }
+  ],
+  "systems": ["base_single", "persona_voting", "persona_c0", "persona_c1"],
+  "judge": {
+    "backend": "none"
+  },
+  "personas": ["mathematical", "goodness", "remorse"],
+  "output_dir": "outputs/abstention_hf_trial"
+}

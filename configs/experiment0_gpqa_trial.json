@@ -1,0 +1,25 @@
+{
+  "backend": "hf_peft",
+  "model_name": "Qwen/Qwen2.5-7B-Instruct",
+  "max_new_tokens": 384,
+  "adapter_paths": {
+    "mathematical": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/mathematical",
+    "goodness": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/goodness",
+    "remorse": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/remorse"
+  },
+  "benchmarks": [
+    {
+      "name": "gpqa",
+      "path": "benchmarks/gpqa/gpqa_diamond.csv",
+      "limit": 10,
+      "seed": 0
+    }
+  ],
+  "systems": ["base_single", "persona_voting", "persona_c0", "persona_c1"],
+  "judge": {
+    "backend": "none"
+  },
+  "personas": ["mathematical", "goodness", "remorse"],
+  "output_dir": "outputs/gpqa_trial"
+}
+

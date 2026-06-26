@@ -1,0 +1,27 @@
+{
+  "backend": "mock",
+  "benchmarks": [
+    {
+      "name": "gpqa",
+      "path": "benchmarks/gpqa/gpqa_smoke.csv",
+      "limit": 1,
+      "seed": 0
+    },
+    {
+      "name": "abstentionbench",
+      "path": "benchmarks/abstentionbench/abstention_smoke.jsonl",
+      "limit": 1
+    },
+    {
+      "name": "deceptionbench",
+      "path": "benchmarks/deceptionbench/deception_smoke.jsonl",
+      "limit": 1
+    }
+  ],
+  "systems": ["base_single", "persona_voting", "persona_c0", "persona_c1"],
+  "judge": {
+    "backend": "mock"
+  },
+  "personas": ["mathematical", "goodness", "remorse"],
+  "output_dir": "outputs/smoke"
+}

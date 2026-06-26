@@ -1,0 +1,26 @@
+{
+  "backend": "hf_peft",
+  "model_name": "Qwen/Qwen2.5-7B-Instruct",
+  "max_new_tokens": 512,
+  "adapter_paths": {
+    "mathematical": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/mathematical",
+    "goodness": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/goodness",
+    "remorse": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/remorse"
+  },
+  "benchmarks": [
+    {
+      "name": "deceptionbench",
+      "source": "hf",
+      "limit": 10,
+      "prompt_field": "question"
+    }
+  ],
+  "systems": ["base_single", "persona_c0", "persona_c1"],
+  "judge": {
+    "backend": "deepseek",
+    "model": "deepseek-v4-flash",
+    "api_key_env": "DEEPSEEK_API_KEY"
+  },
+  "personas": ["mathematical", "goodness", "remorse"],
+  "output_dir": "outputs/deception_hf_trial"
+}

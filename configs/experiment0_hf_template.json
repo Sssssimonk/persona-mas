@@ -1,0 +1,27 @@
+{
+  "backend": "hf_peft",
+  "model_name": "Qwen/Qwen2.5-7B-Instruct",
+  "max_new_tokens": 256,
+  "adapter_paths": {
+    "mathematical": "REPLACE_WITH_MATHEMATICAL_ADAPTER_PATH",
+    "goodness": "REPLACE_WITH_GOODNESS_ADAPTER_PATH",
+    "remorse": "REPLACE_WITH_REMORSE_ADAPTER_PATH"
+  },
+  "benchmarks": [
+    {
+      "name": "gpqa",
+      "path": "benchmarks/gpqa/gpqa_diamond.csv",
+      "limit": 10,
+      "seed": 0
+    }
+  ],
+  "systems": ["base_single", "persona_voting", "persona_c0", "persona_c1"],
+  "judge": {
+    "backend": "deepseek",
+    "model": "deepseek-v4-flash",
+    "api_key_env": "DEEPSEEK_API_KEY",
+    "base_url": "https://api.deepseek.com"
+  },
+  "personas": ["mathematical", "goodness", "remorse"],
+  "output_dir": "outputs/hf_trial"
+}
