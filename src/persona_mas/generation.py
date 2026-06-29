@@ -35,16 +35,37 @@ class MockBackend:
         return "Final response: mock"
 
 
+def resolve_torch_dtype(torch_module, dtype_name: str = "auto"):
+    normalized = (dtype_name or "auto").lower()
+    if normalized in {"bf16", "bfloat16"}:
+        return torch_module.bfloat16
+    if normalized in {"fp16", "float16", "half"}:
+        return torch_module.float16
+    if normalized in {"fp32", "float32"}:
+        return torch_module.float32
+    if normalized != "auto":
+        raise ValueError(f"Unsupported torch dtype: {dtype_name}")
+
+    cuda = getattr(torch_module, "cuda", None)
+    if cuda is None or not cuda.is_available():
+        return torch_module.float32
+
+    is_bf16_supported = getattr(cuda, "is_bf16_supported", lambda: False)
+    return torch_module.bfloat16 if is_bf16_supported() else torch_module.float16
+
+
 class HFBackend:
     def __init__(
         self,
         model_name: str = "Qwen/Qwen2.5-7B-Instruct",
         adapter_name: str | None = None,
         max_new_tokens: int = 256,
+        torch_dtype: str = "auto",
     ) -> None:
         self.model_name = model_name
         self.adapter_name = adapter_name
         self.max_new_tokens = max_new_tokens
+        self.torch_dtype = torch_dtype
         self._loaded = False
 
     def _load(self) -> None:
@@ -54,7 +75,7 @@ class HFBackend:
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True)
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_name,
-            torch_dtype=torch.bfloat16,
+            torch_dtype=resolve_torch_dtype(torch, self.torch_dtype),
             device_map="auto",
             trust_remote_code=True,
         )
@@ -91,10 +112,12 @@ class HFPersonaBackend:
         model_name: str,
         adapter_paths: dict[str, str] | None = None,
         max_new_tokens: int = 256,
+        torch_dtype: str = "auto",
     ) -> None:
         self.model_name = model_name
         self.adapter_paths = adapter_paths or {}
         self.max_new_tokens = max_new_tokens
+        self.torch_dtype = torch_dtype
         self._loaded = False
 
     def _load(self) -> None:
@@ -104,7 +127,7 @@ class HFPersonaBackend:
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True)
         base_model = AutoModelForCausalLM.from_pretrained(
             self.model_name,
-            torch_dtype=torch.bfloat16,
+            torch_dtype=resolve_torch_dtype(torch, self.torch_dtype),
             device_map="auto",
             trust_remote_code=True,
         )

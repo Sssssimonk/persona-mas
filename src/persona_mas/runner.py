@@ -148,6 +148,7 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
             model_name=config.get("model_name", "Qwen/Qwen2.5-7B-Instruct"),
             adapter_paths=config.get("adapter_paths", {}),
             max_new_tokens=int(config.get("max_new_tokens", 256)),
+            torch_dtype=config.get("torch_dtype", "auto"),
         )
     else:
         raise ValueError(f"Unsupported backend: {backend_name}")
