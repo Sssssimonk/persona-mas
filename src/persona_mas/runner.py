@@ -70,9 +70,17 @@ def _filter_samples_by_manifest(samples: list[BenchmarkSample], manifest_path: s
     return selected
 
 
-def _agent_call(backend: Any, sample: BenchmarkSample, agent: str, persona_prompt_mode: str = "none") -> AgentOutput:
-    prompt = build_independent_prompt(sample, agent, persona_prompt_mode=persona_prompt_mode)
-    raw = backend.generate(agent, prompt)
+def _agent_call(
+    backend: Any,
+    sample: BenchmarkSample,
+    agent: str,
+    persona_prompt_mode: str = "none",
+    protocol: str = "strict",
+    backend_agent: str | None = None,
+) -> AgentOutput:
+    prompt_persona = backend_agent or agent
+    prompt = build_independent_prompt(sample, prompt_persona, persona_prompt_mode=persona_prompt_mode, protocol=protocol)
+    raw = backend.generate(prompt_persona, prompt)
     parsed = parse_for_benchmark(sample.benchmark, raw)
     return AgentOutput(agent=agent, prompt=prompt, raw_text=raw, parsed=parsed)
 
@@ -84,8 +92,18 @@ def _single_record(
     system: str,
     judge: Any | None,
     persona_prompt_mode: str = "none",
+    protocol: str = "strict",
+    backend_agent: str | None = None,
 ) -> RunRecord:
-    output = _agent_call(backend, sample, agent, persona_prompt_mode=persona_prompt_mode)
+    output = _agent_call(
+        backend,
+        sample,
+        agent,
+        persona_prompt_mode=persona_prompt_mode,
+        protocol=protocol,
+        backend_agent=backend_agent,
+    )
+    judge_output = _judge_if_needed(judge, sample, output.parsed)
     return RunRecord(
         benchmark=sample.benchmark,
         sample_id=sample.sample_id,
@@ -94,8 +112,8 @@ def _single_record(
         agent_outputs={agent: output},
         final_output=output.parsed,
         gold=sample.gold,
-        judge_output=_judge_if_needed(judge, sample, output.parsed),
-        metrics=_basic_metrics(sample, output.parsed),
+        judge_output=judge_output,
+        metrics=_basic_metrics(sample, output.parsed, judge_output),
     )
 
 
@@ -105,10 +123,20 @@ def _persona_initial_outputs(
     personas: list[str],
     cache: dict[str, AgentOutput],
     persona_prompt_mode: str,
+    protocol: str,
+    backend_agent_map: dict[str, str] | None = None,
 ) -> dict[str, AgentOutput]:
+    backend_agent_map = backend_agent_map or {}
     for agent in personas:
         if agent not in cache:
-            cache[agent] = _agent_call(backend, sample, agent, persona_prompt_mode=persona_prompt_mode)
+            cache[agent] = _agent_call(
+                backend,
+                sample,
+                agent,
+                persona_prompt_mode=persona_prompt_mode,
+                protocol=protocol,
+                backend_agent=backend_agent_map.get(agent),
+            )
     return {agent: cache[agent] for agent in personas}
 
 
@@ -123,19 +151,31 @@ def _voting_record(
     judge: Any | None,
     initial_cache: dict[str, AgentOutput],
     persona_prompt_mode: str,
+    protocol: str,
+    system: str = "persona_voting",
+    backend_agent_map: dict[str, str] | None = None,
 ) -> RunRecord:
-    outputs = _persona_initial_outputs(backend, sample, personas, initial_cache, persona_prompt_mode)
+    outputs = _persona_initial_outputs(
+        backend,
+        sample,
+        personas,
+        initial_cache,
+        persona_prompt_mode,
+        protocol,
+        backend_agent_map=backend_agent_map,
+    )
     final = majority_vote([output.parsed for output in outputs.values()])
+    judge_output = _judge_if_needed(judge, sample, final)
     return RunRecord(
         benchmark=sample.benchmark,
         sample_id=sample.sample_id,
-        system="persona_voting",
+        system=system,
         aggregation="voting",
         agent_outputs=outputs,
         final_output=final,
         gold=sample.gold,
-        judge_output=_judge_if_needed(judge, sample, final),
-        metrics=_basic_metrics(sample, final),
+        judge_output=judge_output,
+        metrics=_basic_metrics(sample, final, judge_output),
     )
 
 
@@ -147,8 +187,20 @@ def _c_record(
     judge: Any | None,
     initial_cache: dict[str, AgentOutput],
     persona_prompt_mode: str,
+    protocol: str,
+    system: str | None = None,
+    backend_agent_map: dict[str, str] | None = None,
 ) -> RunRecord:
-    initial_agent_outputs = _persona_initial_outputs(backend, sample, personas, initial_cache, persona_prompt_mode)
+    backend_agent_map = backend_agent_map or {}
+    initial_agent_outputs = _persona_initial_outputs(
+        backend,
+        sample,
+        personas,
+        initial_cache,
+        persona_prompt_mode,
+        protocol,
+        backend_agent_map=backend_agent_map,
+    )
     initial = {agent: output.parsed for agent, output in initial_agent_outputs.items()}
     debate: dict[str, ParsedOutput] | None = None
     all_outputs = dict(initial_agent_outputs)
@@ -157,22 +209,33 @@ def _c_record(
         debate = {}
         for agent, own in initial.items():
             others = {other: output for other, output in initial.items() if other != agent}
+            prompt_persona = backend_agent_map.get(agent, agent)
             prompt = build_debate_prompt(
                 sample,
-                agent,
+                prompt_persona,
                 own,
                 others,
                 persona_prompt_mode=persona_prompt_mode,
                 agent_labels=labels,
+                protocol=protocol,
             )
-            raw = backend.generate(agent, prompt)
+            raw = backend.generate(prompt_persona, prompt)
             parsed = parse_debate_round_output(raw)
             all_outputs[f"{agent}_round1"] = AgentOutput(agent=f"{agent}_round1", prompt=prompt, raw_text=raw, parsed=parsed)
             debate[agent] = parsed
-    synth_prompt = build_synthesizer_prompt(sample, initial, debate, agent_labels=labels)
+    synth_prompt = build_synthesizer_prompt(sample, initial, debate, agent_labels=labels, protocol=protocol)
     synth_raw = backend.generate("base_synthesizer", synth_prompt)
     final = parse_synthesizer_output(synth_raw)
-    system = "persona_c1" if c1 else "persona_c0"
+    system = system or ("persona_c1" if c1 else "persona_c0")
+    judge_output = _judge_if_needed(judge, sample, final)
+    metrics = _basic_metrics(sample, final, judge_output)
+    if c1 and debate is not None:
+        changed = {
+            agent: debate[agent].decision != initial[agent].decision
+            or debate[agent].final_response != initial[agent].final_response
+            for agent in debate
+        }
+        metrics["round1_changed_count"] = sum(changed.values())
     return RunRecord(
         benchmark=sample.benchmark,
         sample_id=sample.sample_id,
@@ -181,16 +244,27 @@ def _c_record(
         agent_outputs=all_outputs,
         final_output=final,
         gold=sample.gold,
-        judge_output=_judge_if_needed(judge, sample, final),
-        metrics=_basic_metrics(sample, final),
+        judge_output=judge_output,
+        metrics=metrics,
     )
 
 
-def _basic_metrics(sample: BenchmarkSample, output: ParsedOutput) -> dict[str, Any]:
+def _basic_metrics(
+    sample: BenchmarkSample,
+    output: ParsedOutput,
+    judge_output: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     if sample.benchmark == "gpqa":
         return {"correct": output.decision == sample.gold.get("correct_letter")}
     if sample.benchmark == "abstentionbench":
         should = bool(sample.gold.get("should_abstain"))
+        if judge_output and judge_output.get("label") in {"ABSTAIN", "ANSWER", "UNCLEAR"}:
+            label = str(judge_output["label"])
+            return {
+                "correct_abstention_decision": (label == "ABSTAIN") == should if label != "UNCLEAR" else False,
+                "should_abstain": should,
+                "judge_abstention_label": label,
+            }
         return {
             "correct_abstention_decision": (output.decision == "ABSTAIN") == should,
             "should_abstain": should,
@@ -203,6 +277,8 @@ def _judge_if_needed(judge: Any | None, sample: BenchmarkSample, output: ParsedO
         return None
     if sample.benchmark == "deceptionbench":
         return judge.judge_deception(sample, output)
+    if sample.benchmark == "abstentionbench" and hasattr(judge, "judge_abstention"):
+        return judge.judge_abstention(sample, output)
     return None
 
 
@@ -235,6 +311,7 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
         raise ValueError(f"Unsupported judge backend: {judge_backend}")
     personas = config.get("personas", ["mathematical", "goodness", "remorse"])
     persona_prompt_mode = config.get("persona_prompt_mode", "none")
+    prompt_protocol = config.get("prompt_protocol", config.get("protocol", "strict"))
     systems = set(config.get("systems", ["base_single"]))
     output_dir = Path(config.get("output_dir", "outputs/smoke"))
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -244,13 +321,169 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
         print(f"[{sample_index}/{len(samples)}] {sample.benchmark}/{sample.sample_id}", flush=True)
         initial_cache: dict[str, AgentOutput] = {}
         if "base_single" in systems:
-            records.append(_single_record(backend, sample, "base", "base_single", judge, persona_prompt_mode="none"))
+            records.append(
+                _single_record(
+                    backend,
+                    sample,
+                    "base",
+                    "base_single",
+                    judge,
+                    persona_prompt_mode="none",
+                    protocol=prompt_protocol,
+                )
+            )
+        if "single_persona" in systems:
+            for persona in personas:
+                records.append(
+                    _single_record(
+                        backend,
+                        sample,
+                        persona,
+                        f"{persona}_single",
+                        judge,
+                        persona_prompt_mode=persona_prompt_mode,
+                        protocol=prompt_protocol,
+                    )
+                )
+        for persona in personas:
+            system_name = f"{persona}_single"
+            if system_name in systems:
+                records.append(
+                    _single_record(
+                        backend,
+                        sample,
+                        persona,
+                        system_name,
+                        judge,
+                        persona_prompt_mode=persona_prompt_mode,
+                        protocol=prompt_protocol,
+                    )
+                )
         if "persona_voting" in systems and sample.benchmark in {"gpqa", "abstentionbench"}:
-            records.append(_voting_record(backend, sample, personas, judge, initial_cache, persona_prompt_mode))
+            records.append(_voting_record(backend, sample, personas, judge, initial_cache, persona_prompt_mode, prompt_protocol))
         if "persona_c0" in systems:
-            records.append(_c_record(backend, sample, personas, c1=False, judge=judge, initial_cache=initial_cache, persona_prompt_mode=persona_prompt_mode))
+            records.append(
+                _c_record(
+                    backend,
+                    sample,
+                    personas,
+                    c1=False,
+                    judge=judge,
+                    initial_cache=initial_cache,
+                    persona_prompt_mode=persona_prompt_mode,
+                    protocol=prompt_protocol,
+                )
+            )
         if "persona_c1" in systems:
-            records.append(_c_record(backend, sample, personas, c1=True, judge=judge, initial_cache=initial_cache, persona_prompt_mode=persona_prompt_mode))
+            records.append(
+                _c_record(
+                    backend,
+                    sample,
+                    personas,
+                    c1=True,
+                    judge=judge,
+                    initial_cache=initial_cache,
+                    persona_prompt_mode=persona_prompt_mode,
+                    protocol=prompt_protocol,
+                )
+            )
+        if "base_ensemble_voting" in systems and sample.benchmark in {"gpqa", "abstentionbench"}:
+            base_agents = ["base_1", "base_2", "base_3"]
+            base_map = {agent: "base" for agent in base_agents}
+            records.append(
+                _voting_record(
+                    backend,
+                    sample,
+                    base_agents,
+                    judge,
+                    {},
+                    persona_prompt_mode="none",
+                    protocol=prompt_protocol,
+                    system="base_ensemble_voting",
+                    backend_agent_map=base_map,
+                )
+            )
+        if "base_ensemble_c0" in systems:
+            base_agents = ["base_1", "base_2", "base_3"]
+            base_map = {agent: "base" for agent in base_agents}
+            records.append(
+                _c_record(
+                    backend,
+                    sample,
+                    base_agents,
+                    c1=False,
+                    judge=judge,
+                    initial_cache={},
+                    persona_prompt_mode="none",
+                    protocol=prompt_protocol,
+                    system="base_ensemble_c0",
+                    backend_agent_map=base_map,
+                )
+            )
+        if "base_ensemble_c1" in systems:
+            base_agents = ["base_1", "base_2", "base_3"]
+            base_map = {agent: "base" for agent in base_agents}
+            records.append(
+                _c_record(
+                    backend,
+                    sample,
+                    base_agents,
+                    c1=True,
+                    judge=judge,
+                    initial_cache={},
+                    persona_prompt_mode="none",
+                    protocol=prompt_protocol,
+                    system="base_ensemble_c1",
+                    backend_agent_map=base_map,
+                )
+            )
+        for persona in personas:
+            homogeneous_agents = [f"{persona}_{index}" for index in range(1, 4)]
+            homogeneous_map = {agent: persona for agent in homogeneous_agents}
+            if f"homogeneous_{persona}_voting" in systems and sample.benchmark in {"gpqa", "abstentionbench"}:
+                records.append(
+                    _voting_record(
+                        backend,
+                        sample,
+                        homogeneous_agents,
+                        judge,
+                        {},
+                        persona_prompt_mode=persona_prompt_mode,
+                        protocol=prompt_protocol,
+                        system=f"homogeneous_{persona}_voting",
+                        backend_agent_map=homogeneous_map,
+                    )
+                )
+            if f"homogeneous_{persona}_c0" in systems:
+                records.append(
+                    _c_record(
+                        backend,
+                        sample,
+                        homogeneous_agents,
+                        c1=False,
+                        judge=judge,
+                        initial_cache={},
+                        persona_prompt_mode=persona_prompt_mode,
+                        protocol=prompt_protocol,
+                        system=f"homogeneous_{persona}_c0",
+                        backend_agent_map=homogeneous_map,
+                    )
+                )
+            if f"homogeneous_{persona}_c1" in systems:
+                records.append(
+                    _c_record(
+                        backend,
+                        sample,
+                        homogeneous_agents,
+                        c1=True,
+                        judge=judge,
+                        initial_cache={},
+                        persona_prompt_mode=persona_prompt_mode,
+                        protocol=prompt_protocol,
+                        system=f"homogeneous_{persona}_c1",
+                        backend_agent_map=homogeneous_map,
+                    )
+                )
     records_path = output_dir / "records.jsonl"
     with records_path.open("w", encoding="utf-8") as handle:
         for record in records:

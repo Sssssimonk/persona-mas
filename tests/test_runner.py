@@ -80,6 +80,100 @@ def test_runner_uses_neutral_prompt_mode_by_default(tmp_path):
     assert all("Persona:" not in prompt for prompt in prompts)
 
 
+def test_runner_passes_prompt_protocol_to_agent_and_synthesizer_prompts(tmp_path):
+    gpqa_path = tmp_path / "gpqa.csv"
+    gpqa_path.write_text(
+        "Question,Correct Answer,Incorrect Answer 1,Incorrect Answer 2,Incorrect Answer 3\n"
+        "What is true?,Right,Wrong1,Wrong2,Wrong3\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "outputs"
+    config = {
+        "backend": "mock",
+        "prompt_protocol": "official_cot",
+        "benchmarks": [{"name": "gpqa", "path": str(gpqa_path), "limit": 1}],
+        "systems": ["persona_c1"],
+        "personas": ["mathematical", "goodness", "remorse"],
+        "output_dir": str(output_dir),
+    }
+    run_experiment(config)
+    record = json.loads((output_dir / "records.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    first_prompt = record["agent_outputs"]["mathematical"]["prompt"]
+    round_prompt = record["agent_outputs"]["mathematical_round1"]["prompt"]
+    assert "Reasoning: <your step-by-step reasoning>" in first_prompt
+    assert "Final answer: <A|B|C|D>" in first_prompt
+    assert "Other agents' initial answers:" in round_prompt
+    assert "Changed:" not in round_prompt
+    assert record["metrics"]["round1_changed_count"] == 0
+
+
+def test_runner_supports_single_persona_system(tmp_path):
+    gpqa_path = tmp_path / "gpqa.csv"
+    gpqa_path.write_text(
+        "Question,Correct Answer,Incorrect Answer 1,Incorrect Answer 2,Incorrect Answer 3\n"
+        "What is true?,Right,Wrong1,Wrong2,Wrong3\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "outputs"
+    config = {
+        "backend": "mock",
+        "benchmarks": [{"name": "gpqa", "path": str(gpqa_path), "limit": 1}],
+        "systems": ["single_persona"],
+        "personas": ["mathematical", "goodness", "remorse"],
+        "output_dir": str(output_dir),
+    }
+    run_experiment(config)
+    records = [json.loads(line) for line in (output_dir / "records.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert [record["system"] for record in records] == ["mathematical_single", "goodness_single", "remorse_single"]
+
+
+def test_runner_supports_base_ensemble_and_homogeneous_controls(tmp_path):
+    gpqa_path = tmp_path / "gpqa.csv"
+    gpqa_path.write_text(
+        "Question,Correct Answer,Incorrect Answer 1,Incorrect Answer 2,Incorrect Answer 3\n"
+        "What is true?,Right,Wrong1,Wrong2,Wrong3\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "outputs"
+    config = {
+        "backend": "mock",
+        "benchmarks": [{"name": "gpqa", "path": str(gpqa_path), "limit": 1}],
+        "systems": ["base_ensemble_c0", "homogeneous_mathematical_c0"],
+        "personas": ["mathematical", "goodness", "remorse"],
+        "output_dir": str(output_dir),
+    }
+    run_experiment(config)
+    records = [json.loads(line) for line in (output_dir / "records.jsonl").read_text(encoding="utf-8").splitlines()]
+    by_system = {record["system"]: record for record in records}
+    assert set(by_system["base_ensemble_c0"]["agent_outputs"]) == {"base_1", "base_2", "base_3"}
+    assert set(by_system["homogeneous_mathematical_c0"]["agent_outputs"]) == {
+        "mathematical_1",
+        "mathematical_2",
+        "mathematical_3",
+    }
+
+
+def test_runner_uses_abstention_judge_for_natural_protocol(tmp_path):
+    abstention_path = tmp_path / "abstention.jsonl"
+    abstention_path.write_text(
+        json.dumps({"id": "a0", "question": "What is the answer?", "should_abstain": True}) + "\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "outputs"
+    config = {
+        "backend": "mock",
+        "prompt_protocol": "official_natural",
+        "benchmarks": [{"name": "abstentionbench", "source": "local", "path": str(abstention_path)}],
+        "systems": ["base_single"],
+        "judge": {"backend": "mock"},
+        "output_dir": str(output_dir),
+    }
+    summary = run_experiment(config)
+    record = json.loads((output_dir / "records.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert record["judge_output"]["label"] == "ANSWER"
+    assert "judge_answer_rate" in summary["by_benchmark_system"]["abstentionbench"]["base_single"]
+
+
 def test_runner_logs_sample_progress(tmp_path):
     gpqa_path = tmp_path / "gpqa.csv"
     gpqa_path.write_text(

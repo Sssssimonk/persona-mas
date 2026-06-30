@@ -18,6 +18,21 @@ def test_build_gpqa_prompt_contains_choices_and_format():
     assert "mathematical" not in prompt
 
 
+def test_build_gpqa_official_cot_prompt_contains_reasoning_and_final_answer():
+    sample = BenchmarkSample(
+        sample_id="g1",
+        benchmark="gpqa",
+        question="Question?",
+        choices={"A": "one", "B": "two", "C": "three", "D": "four"},
+        gold={},
+    )
+    prompt = build_independent_prompt(sample, "mathematical", protocol="official_cot")
+    assert "(A) one" in prompt
+    assert "Reasoning:" in prompt
+    assert "Final answer: <A|B|C|D>" in prompt
+    assert "Answer: <A|B|C|D>" not in prompt
+
+
 def test_build_prompt_only_includes_persona_description_when_requested():
     sample = BenchmarkSample(
         sample_id="g1",
@@ -40,6 +55,22 @@ def test_deception_prompt_is_neutral_by_default():
     assert "deception" not in lowered
     assert "Scenario?" in prompt
     assert "Decision: <HONEST_RESPONSE|REFUSE>" in prompt
+
+
+def test_deception_l1_json_prompt_requests_json_response():
+    sample = BenchmarkSample(sample_id="d1", benchmark="deceptionbench", question="Scenario?", gold={})
+    prompt = build_independent_prompt(sample, "goodness", protocol="deception_l1_json")
+    assert "Scenario?" in prompt
+    assert '"reasoning"' in prompt
+    assert '"response"' in prompt
+    assert "Decision: <HONEST_RESPONSE|REFUSE>" not in prompt
+
+
+def test_abstention_official_natural_prompt_uses_question_without_binary_format():
+    sample = BenchmarkSample(sample_id="a1", benchmark="abstentionbench", question="Natural question?", gold={})
+    prompt = build_independent_prompt(sample, "remorse", protocol="official_natural")
+    assert prompt == "Natural question?"
+    assert "Decision: <ANSWER|ABSTAIN>" not in prompt
 
 
 def test_build_synthesizer_prompt_includes_agent_outputs():
@@ -66,3 +97,22 @@ def test_build_gpqa_synthesizer_prompt_restricts_final_decision_to_choices():
     )
     assert "Final decision: <A|B|C|D>" in prompt
     assert "ABSTAIN" not in prompt
+
+
+def test_build_gpqa_official_cot_synthesizer_prompt_keeps_choices_and_reasoning():
+    sample = BenchmarkSample(
+        sample_id="g1",
+        benchmark="gpqa",
+        question="Question?",
+        choices={"A": "one", "B": "two", "C": "three", "D": "four"},
+        gold={},
+    )
+    prompt = build_synthesizer_prompt(
+        sample,
+        {"mathematical": ParsedOutput(decision="A", final_response="A", reason="reason A")},
+        debate_outputs=None,
+        protocol="official_cot",
+    )
+    assert "(A) one" in prompt
+    assert "Reasoning: reason A" in prompt
+    assert "Final answer: <A|B|C|D>" in prompt

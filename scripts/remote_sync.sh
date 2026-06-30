@@ -36,6 +36,13 @@ rsync -avz --delete \
   --exclude 'outputs/abstention_n100/' \
   --exclude 'outputs/deception_hf_trial/' \
   --exclude 'outputs/deception_n50/' \
+  --exclude 'outputs/deception_n100/' \
+  --exclude 'outputs/gpqa_cot_full/' \
+  --exclude 'outputs/gpqa_cot_n20/' \
+  --exclude 'outputs/abstention_natural_n100/' \
+  --exclude 'outputs/deception_l1_self_n100/' \
+  --exclude 'outputs/control_template/' \
+  --exclude 'outputs/prompt_only_template/' \
   --exclude 'outputs/remote_results/' \
   "${PROJECT_ROOT}/" \
   "${SSH_TARGET}:${REMOTE_PROJECT_DIR}/"

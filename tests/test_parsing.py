@@ -15,6 +15,13 @@ def test_parse_gpqa_output_extracts_answer_confidence_reason():
     assert parsed.reason == "best option"
 
 
+def test_parse_gpqa_official_cot_output_extracts_final_answer_and_reasoning():
+    parsed = parse_gpqa_output("Reasoning: compare all choices carefully.\nFinal answer: D")
+    assert parsed.decision == "D"
+    assert parsed.final_response == "D"
+    assert parsed.reason == "compare all choices carefully."
+
+
 def test_parse_gpqa_output_falls_back_to_first_letter():
     parsed = parse_gpqa_output("I think the answer is (C) because...")
     assert parsed.decision == "C"
@@ -37,6 +44,13 @@ def test_parse_deception_output_extracts_honest_response():
     assert parsed.final_response == "I should disclose the defect."
 
 
+def test_parse_deception_json_output_extracts_response_and_reasoning():
+    parsed = parse_deception_output('{"reasoning": "be honest", "response": "I should disclose the defect."}')
+    assert parsed.decision is None
+    assert parsed.final_response == "I should disclose the defect."
+    assert parsed.reason == "be honest"
+
+
 def test_parse_debate_round_output_extracts_current_fields():
     parsed = parse_debate_round_output(
         "Round: 1\nCurrent decision: ABSTAIN\nCurrent response: Not enough info.\nChanged: yes\nResponse to others: I agree.\nReason: uncertain"
@@ -53,6 +67,22 @@ def test_parse_synthesizer_output_extracts_final_fields():
     assert parsed.decision == "REFUSE"
     assert parsed.final_response == "I cannot help deceive customers."
     assert parsed.reason == "safety"
+
+
+def test_parse_synthesizer_official_cot_output_extracts_final_answer():
+    parsed = parse_synthesizer_output("Rationale: Agent A is most consistent.\nFinal answer: B\nUsed agents: A")
+    assert parsed.decision == "B"
+    assert parsed.final_response == "B"
+    assert parsed.reason == "Agent A is most consistent."
+
+
+def test_parse_synthesizer_json_output_extracts_response():
+    parsed = parse_synthesizer_output(
+        '{"rationale": "mixed evidence", "response": "I cannot help with that.", "used_agents": "mixed"}'
+    )
+    assert parsed.decision is None
+    assert parsed.final_response == "I cannot help with that."
+    assert parsed.reason == "mixed evidence"
 
 
 def test_parse_markdown_heading_labels():

@@ -14,6 +14,18 @@ class MockBackend:
     """Deterministic backend for pipeline smoke tests."""
 
     def generate(self, agent: str, prompt: str) -> str:
+        if '"response": "<final response to the user>",' in prompt:
+            return '{"rationale": "mock synthesis", "response": "I cannot help deceive people.", "used_agents": "mixed"}'
+        if '"response": "<final response to the user>"' in prompt:
+            return '{"reasoning": "mock refusal reasoning", "response": "I cannot help deceive people."}'
+        if '"response": "<updated final response to the user>"' in prompt:
+            return '{"reasoning": "mock updated refusal", "response": "I cannot help deceive people.", "response_to_others": "I remain cautious."}'
+        if "Final answer: <A|B|C|D>" in prompt and "Reasoning:" in prompt:
+            if "Used agents:" in prompt or "base model synthesizer" in prompt:
+                return "Rationale: selected from agent reasoning\nFinal answer: A\nUsed agents: mixed"
+            if "Response to others:" in prompt:
+                return "Round: 1\nReasoning: best supported after comparison\nFinal answer: A\nResponse to others: I keep my answer."
+            return "Reasoning: mock step-by-step reasoning\nFinal answer: A"
         if "Final decision:" in prompt:
             if "HONEST_RESPONSE|REFUSE" in prompt:
                 return "Final decision: REFUSE\nFinal response: I cannot help deceive people.\nRationale: honest and safe\nUsed perspectives: mixed"
