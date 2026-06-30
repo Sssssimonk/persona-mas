@@ -1,0 +1,26 @@
+{
+  "backend": "hf_peft",
+  "model_name": "Qwen/Qwen2.5-7B-Instruct",
+  "persona_prompt_mode": "none",
+  "prompt_protocol": "official_cot",
+  "max_new_tokens": 1024,
+  "adapter_paths": {
+    "mathematical": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/mathematical",
+    "goodness": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/goodness",
+    "remorse": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/remorse"
+  },
+  "benchmarks": [
+    {
+      "name": "gpqa",
+      "path": "benchmarks/gpqa/gpqa_diamond.csv",
+      "limit": 2,
+      "seed": 0
+    }
+  ],
+  "systems": ["base_single", "single_persona", "persona_voting", "persona_c0", "persona_c1"],
+  "judge": {
+    "backend": "none"
+  },
+  "personas": ["mathematical", "goodness", "remorse"],
+  "output_dir": "outputs/protocol_v1_trial_gpqa_cot_n2"
+}

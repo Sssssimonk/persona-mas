@@ -41,6 +41,10 @@ rsync -avz --delete \
   --exclude 'outputs/gpqa_cot_n20/' \
   --exclude 'outputs/abstention_natural_n100/' \
   --exclude 'outputs/deception_l1_self_n100/' \
+  --exclude 'outputs/protocol_v1_trial_gpqa_cot_n2/' \
+  --exclude 'outputs/protocol_v1_trial_abstention_natural_n2/' \
+  --exclude 'outputs/protocol_v1_trial_abstention_unanswerable_n2/' \
+  --exclude 'outputs/protocol_v1_trial_deception_l1_self_n2/' \
   --exclude 'outputs/control_template/' \
   --exclude 'outputs/prompt_only_template/' \
   --exclude 'outputs/remote_results/' \

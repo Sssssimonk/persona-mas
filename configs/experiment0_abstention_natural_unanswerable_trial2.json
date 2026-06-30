@@ -1,0 +1,28 @@
+{
+  "backend": "hf_peft",
+  "model_name": "Qwen/Qwen2.5-7B-Instruct",
+  "persona_prompt_mode": "none",
+  "prompt_protocol": "official_natural",
+  "max_new_tokens": 1024,
+  "adapter_paths": {
+    "mathematical": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/mathematical",
+    "goodness": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/goodness",
+    "remorse": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/remorse"
+  },
+  "benchmarks": [
+    {
+      "name": "abstentionbench",
+      "source": "local",
+      "path": "benchmarks/abstentionbench/abstention_full.jsonl",
+      "manifest_path": "benchmarks/manifests/experiment0_abstention_unanswerable_trial2.jsonl"
+    }
+  ],
+  "systems": ["base_single", "single_persona", "persona_c0", "persona_c1"],
+  "judge": {
+    "backend": "deepseek",
+    "model": "deepseek-v4-flash",
+    "api_key_env": "DEEPSEEK_API_KEY"
+  },
+  "personas": ["mathematical", "goodness", "remorse"],
+  "output_dir": "outputs/protocol_v1_trial_abstention_unanswerable_n2"
+}
