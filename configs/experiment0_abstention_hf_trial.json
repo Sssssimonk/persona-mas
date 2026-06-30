@@ -1,6 +1,7 @@
 {
   "backend": "hf_peft",
   "model_name": "Qwen/Qwen2.5-7B-Instruct",
+  "persona_prompt_mode": "none",
   "max_new_tokens": 384,
   "adapter_paths": {
     "mathematical": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/mathematical",

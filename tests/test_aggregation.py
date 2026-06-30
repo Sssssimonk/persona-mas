@@ -17,6 +17,12 @@ def test_majority_vote_abstention_uses_same_rule():
     assert result.decision == "ABSTAIN"
 
 
+def test_majority_vote_records_tie_without_first_agent_bias():
+    result = majority_vote([out("A"), out("B"), out("C")])
+    assert result.decision is None
+    assert result.final_response == "TIE"
+
+
 def test_pairwise_disagreement_rate_counts_pairs():
     assert pairwise_disagreement_rate([out("A"), out("A"), out("B")]) == 2 / 3
 
@@ -24,4 +30,3 @@ def test_pairwise_disagreement_rate_counts_pairs():
 def test_oracle_correct_true_when_any_agent_correct():
     assert oracle_correct([out("A"), out("C"), out("D")], "C") is True
     assert oracle_correct([out("A"), out("B"), out("D")], "C") is False
-

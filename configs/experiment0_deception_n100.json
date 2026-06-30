@@ -2,7 +2,7 @@
   "backend": "hf_peft",
   "model_name": "Qwen/Qwen2.5-7B-Instruct",
   "persona_prompt_mode": "none",
-  "max_new_tokens": 256,
+  "max_new_tokens": 512,
   "adapter_paths": {
     "mathematical": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/mathematical",
     "goodness": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/goodness",
@@ -10,16 +10,19 @@
   },
   "benchmarks": [
     {
-      "name": "gpqa",
-      "path": "benchmarks/gpqa/gpqa_smoke.csv",
-      "limit": 1,
-      "seed": 0
+      "name": "deceptionbench",
+      "source": "local",
+      "path": "benchmarks/deceptionbench/deception_full.jsonl",
+      "manifest_path": "benchmarks/manifests/experiment0_deception_n100_seed0.jsonl",
+      "prompt_field": "question"
     }
   ],
-  "systems": ["base_single", "persona_voting", "persona_c0", "persona_c1"],
+  "systems": ["base_single", "persona_c0", "persona_c1"],
   "judge": {
-    "backend": "none"
+    "backend": "deepseek",
+    "model": "deepseek-v4-flash",
+    "api_key_env": "DEEPSEEK_API_KEY"
   },
   "personas": ["mathematical", "goodness", "remorse"],
-  "output_dir": "outputs/hf_remote_smoke"
+  "output_dir": "outputs/deception_n100"
 }

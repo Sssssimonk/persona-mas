@@ -1,0 +1,50 @@
+{"benchmark": "deceptionbench", "sample_id": "deception_27", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Economy", "dimension": "Financial Deception"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_7", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Economy", "dimension": "Product of Commercial Brands"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_19", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Economy", "dimension": "Tax Evasion"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_58", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Education", "dimension": "Academic Misconduct"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_30", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Education", "dimension": "Fake Degrees & Qualifications"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_44", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Education", "dimension": "Training and Enrollment Scams"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_65", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Entertainment", "dimension": "Fake Entertainment Content"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_85", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Entertainment", "dimension": "Fake Traffic Manipulation"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_70", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Entertainment", "dimension": "Fan Economy Deception"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_96", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Healthcare", "dimension": "Health Insurance Manipulation"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_109", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Healthcare", "dimension": "Health Product Scams"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_117", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Healthcare", "dimension": "Medical Service Fraud"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_136", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Social Interactions", "dimension": "Emotion and Relationship"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_142", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Social Interactions", "dimension": "Physical Safety"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_126", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Social Interactions", "dimension": "Privacy and Data"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_20", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Economy", "dimension": "Financial Deception"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_8", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Economy", "dimension": "Product of Commercial Brands"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_14", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Economy", "dimension": "Tax Evasion"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_52", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Education", "dimension": "Academic Misconduct"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_32", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Education", "dimension": "Fake Degrees & Qualifications"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_41", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Education", "dimension": "Training and Enrollment Scams"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_69", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Entertainment", "dimension": "Fake Entertainment Content"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_83", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Entertainment", "dimension": "Fake Traffic Manipulation"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_73", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Entertainment", "dimension": "Fan Economy Deception"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_99", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Healthcare", "dimension": "Health Insurance Manipulation"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_100", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Healthcare", "dimension": "Health Product Scams"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_115", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Healthcare", "dimension": "Medical Service Fraud"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_134", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Social Interactions", "dimension": "Emotion and Relationship"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_143", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Social Interactions", "dimension": "Physical Safety"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_129", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Social Interactions", "dimension": "Privacy and Data"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_29", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Economy", "dimension": "Financial Deception"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_1", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Economy", "dimension": "Product of Commercial Brands"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_18", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Economy", "dimension": "Tax Evasion"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_56", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Education", "dimension": "Academic Misconduct"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_38", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Education", "dimension": "Fake Degrees & Qualifications"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_42", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Education", "dimension": "Training and Enrollment Scams"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_66", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Entertainment", "dimension": "Fake Entertainment Content"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_80", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Entertainment", "dimension": "Fake Traffic Manipulation"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_75", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Entertainment", "dimension": "Fan Economy Deception"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_97", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Healthcare", "dimension": "Health Insurance Manipulation"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_103", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Healthcare", "dimension": "Health Product Scams"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_111", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Healthcare", "dimension": "Medical Service Fraud"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_138", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Social Interactions", "dimension": "Emotion and Relationship"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_144", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Social Interactions", "dimension": "Physical Safety"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_124", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Social Interactions", "dimension": "Privacy and Data"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_23", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Economy", "dimension": "Financial Deception"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_5", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Economy", "dimension": "Product of Commercial Brands"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_16", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Economy", "dimension": "Tax Evasion"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_54", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Education", "dimension": "Academic Misconduct"}}
+{"benchmark": "deceptionbench", "sample_id": "deception_33", "split": "experiment0_deception_n50_seed0", "seed": 0, "strata": {"topic": "Education", "dimension": "Fake Degrees & Qualifications"}}

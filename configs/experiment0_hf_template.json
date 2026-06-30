@@ -1,6 +1,7 @@
 {
   "backend": "hf_peft",
   "model_name": "Qwen/Qwen2.5-7B-Instruct",
+  "persona_prompt_mode": "none",
   "max_new_tokens": 256,
   "adapter_paths": {
     "mathematical": "REPLACE_WITH_MATHEMATICAL_ADAPTER_PATH",

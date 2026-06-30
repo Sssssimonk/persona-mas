@@ -11,7 +11,11 @@ def majority_vote(outputs: list[ParsedOutput]) -> ParsedOutput:
     if not decisions:
         return ParsedOutput(decision=None, final_response="")
     counts = Counter(decisions)
-    decision, _ = counts.most_common(1)[0]
+    top_count = max(counts.values())
+    winners = [decision for decision, count in counts.items() if count == top_count]
+    if len(winners) != 1:
+        return ParsedOutput(decision=None, final_response="TIE")
+    decision = winners[0]
     return ParsedOutput(decision=decision, final_response=decision)
 
 
@@ -29,4 +33,3 @@ def oracle_correct(outputs: list[ParsedOutput], correct_decision: str) -> bool:
 
 def all_decisions(outputs: list[ParsedOutput]) -> list[str | None]:
     return [output.decision for output in outputs]
-

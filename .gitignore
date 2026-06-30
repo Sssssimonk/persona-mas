@@ -9,6 +9,8 @@ __pycache__/
 data/
 logs/
 benchmarks/raw/
+benchmarks/abstentionbench/abstention_full.jsonl
+benchmarks/deceptionbench/deception_full.jsonl
 benchmarks/gpqa/gpqa_diamond.csv
 benchmarks/gpqa/gpqa_diamond_epoch_scores.csv
 outputs/raw_generations/
@@ -22,4 +24,6 @@ outputs/hf_trial/
 outputs/gpqa_trial/
 outputs/gpqa_full/
 outputs/abstention_hf_trial/
+outputs/abstention_n100/
 outputs/deception_hf_trial/
+outputs/deception_n50/

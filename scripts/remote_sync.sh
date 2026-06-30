@@ -19,6 +19,8 @@ rsync -avz --delete \
   --exclude 'data/' \
   --exclude 'logs/' \
   --exclude 'benchmarks/raw/' \
+  --exclude 'benchmarks/abstentionbench/abstention_full.jsonl' \
+  --exclude 'benchmarks/deceptionbench/deception_full.jsonl' \
   --exclude 'benchmarks/gpqa/gpqa_diamond.csv' \
   --exclude 'benchmarks/gpqa/gpqa_diamond_epoch_scores.csv' \
   --exclude 'outputs/raw_generations/' \
@@ -31,7 +33,9 @@ rsync -avz --delete \
   --exclude 'outputs/gpqa_trial/' \
   --exclude 'outputs/gpqa_full/' \
   --exclude 'outputs/abstention_hf_trial/' \
+  --exclude 'outputs/abstention_n100/' \
   --exclude 'outputs/deception_hf_trial/' \
+  --exclude 'outputs/deception_n50/' \
   --exclude 'outputs/remote_results/' \
   "${PROJECT_ROOT}/" \
   "${SSH_TARGET}:${REMOTE_PROJECT_DIR}/"
