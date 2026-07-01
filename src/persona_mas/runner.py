@@ -27,6 +27,10 @@ def _json_default(value: Any) -> Any:
     return value
 
 
+def _record_to_json(record: RunRecord) -> str:
+    return json.dumps(record, ensure_ascii=False, default=_json_default)
+
+
 def load_samples(config: dict[str, Any]) -> list[BenchmarkSample]:
     samples: list[BenchmarkSample] = []
     for bench in config["benchmarks"]:
@@ -317,13 +321,22 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
     systems = set(config.get("systems", ["base_single"]))
     output_dir = Path(config.get("output_dir", "outputs/smoke"))
     output_dir.mkdir(parents=True, exist_ok=True)
+    records_path = output_dir / "records.jsonl"
+    records_path.write_text("", encoding="utf-8")
     records: list[RunRecord] = []
+
+    def emit_record(record: RunRecord) -> None:
+        records.append(record)
+        with records_path.open("a", encoding="utf-8") as handle:
+            handle.write(_record_to_json(record) + "\n")
+            handle.flush()
+
     samples = load_samples(config)
     for sample_index, sample in enumerate(samples, start=1):
         print(f"[{sample_index}/{len(samples)}] {sample.benchmark}/{sample.sample_id}", flush=True)
         initial_cache: dict[str, AgentOutput] = {}
         if "base_single" in systems:
-            records.append(
+            emit_record(
                 _single_record(
                     backend,
                     sample,
@@ -344,7 +357,7 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
                         persona_prompt_mode=persona_prompt_mode,
                         protocol=prompt_protocol,
                     )
-                records.append(
+                emit_record(
                     _single_record(
                         backend,
                         sample,
@@ -367,7 +380,7 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
                         persona_prompt_mode=persona_prompt_mode,
                         protocol=prompt_protocol,
                     )
-                records.append(
+                emit_record(
                     _single_record(
                         backend,
                         sample,
@@ -380,9 +393,9 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
                     )
                 )
         if "persona_voting" in systems and sample.benchmark in {"gpqa", "abstentionbench"}:
-            records.append(_voting_record(backend, sample, personas, judge, initial_cache, persona_prompt_mode, prompt_protocol))
+            emit_record(_voting_record(backend, sample, personas, judge, initial_cache, persona_prompt_mode, prompt_protocol))
         if "persona_c0" in systems:
-            records.append(
+            emit_record(
                 _c_record(
                     backend,
                     sample,
@@ -395,7 +408,7 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
                 )
             )
         if "persona_c1" in systems:
-            records.append(
+            emit_record(
                 _c_record(
                     backend,
                     sample,
@@ -410,7 +423,7 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
         if "base_ensemble_voting" in systems and sample.benchmark in {"gpqa", "abstentionbench"}:
             base_agents = ["base_1", "base_2", "base_3"]
             base_map = {agent: "base" for agent in base_agents}
-            records.append(
+            emit_record(
                 _voting_record(
                     backend,
                     sample,
@@ -426,7 +439,7 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
         if "base_ensemble_c0" in systems:
             base_agents = ["base_1", "base_2", "base_3"]
             base_map = {agent: "base" for agent in base_agents}
-            records.append(
+            emit_record(
                 _c_record(
                     backend,
                     sample,
@@ -443,7 +456,7 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
         if "base_ensemble_c1" in systems:
             base_agents = ["base_1", "base_2", "base_3"]
             base_map = {agent: "base" for agent in base_agents}
-            records.append(
+            emit_record(
                 _c_record(
                     backend,
                     sample,
@@ -461,7 +474,7 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
             homogeneous_agents = [f"{persona}_{index}" for index in range(1, 4)]
             homogeneous_map = {agent: persona for agent in homogeneous_agents}
             if f"homogeneous_{persona}_voting" in systems and sample.benchmark in {"gpqa", "abstentionbench"}:
-                records.append(
+                emit_record(
                     _voting_record(
                         backend,
                         sample,
@@ -475,7 +488,7 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
                     )
                 )
             if f"homogeneous_{persona}_c0" in systems:
-                records.append(
+                emit_record(
                     _c_record(
                         backend,
                         sample,
@@ -490,7 +503,7 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
                     )
                 )
             if f"homogeneous_{persona}_c1" in systems:
-                records.append(
+                emit_record(
                     _c_record(
                         backend,
                         sample,
@@ -504,10 +517,6 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
                         backend_agent_map=homogeneous_map,
                     )
                 )
-    records_path = output_dir / "records.jsonl"
-    with records_path.open("w", encoding="utf-8") as handle:
-        for record in records:
-            handle.write(json.dumps(record, ensure_ascii=False, default=_json_default) + "\n")
     summary = summarize_records(records)
     summary.update({"output_dir": str(output_dir), "records_path": str(records_path)})
     (output_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")

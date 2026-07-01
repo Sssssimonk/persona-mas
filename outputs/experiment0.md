@@ -648,6 +648,8 @@ jsonlines
   - `adapter_plus_prompt`: adapter + persona text，诊断 ablation。
 - 主实验 runner 必须能导出 prompt diff 或 prompt hash，证明 base-only 与 adapter-only 的 task prompt 一致。
 - C0/C1 runner 应复用同一批 Round 0 outputs；如果重新生成，需要显式记录 `round0_reused=false`。
+- 当前主流程在每个 sample 内先生成并记录 `base_single` 与三个 `single_persona`，随后 `persona_voting`、`persona_c0`、`persona_c1` 复用同一个 `initial_cache`。这条规则对 GPQA、AbstentionBench、DeceptionBench 都一致；其中 DeceptionBench 不跑 majority voting，但 C0/C1 仍复用 single persona 的 Round 0 outputs。
+- `records.jsonl` 必须按 `RunRecord` 增量写入：每产生一条 record 立即 append 一行并 flush。长任务中即使实验未完成，也可以查看已经完成的 partial records；`summary.json` 仍在实验结束后根据内存中的 records 汇总生成。
 
 ### 13.1.1 Sample manifest
 

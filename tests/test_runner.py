@@ -183,6 +183,92 @@ def test_runner_reuses_single_persona_outputs_as_round0_cache(tmp_path):
         assert by_system["persona_c1"]["agent_outputs"][agent]["raw_text"] == single_raw
 
 
+def test_runner_reuses_single_persona_outputs_for_abstention_and_deception(tmp_path):
+    class CountingBackend:
+        calls: dict[tuple[str, str], int] = {}
+
+        def generate(self, agent: str, prompt: str) -> str:
+            if "base model synthesizer" in prompt:
+                kind = "synth"
+                response = "Rationale: counted synthesis\nFinal answer: ANSWER\nUsed agents: mixed"
+            elif "Other agents' initial answers:" in prompt:
+                kind = "round1"
+                response = "Round: 1\nReasoning: counted update\nFinal answer: ANSWER\nResponse to others: keep"
+            else:
+                kind = "independent"
+                response = "Reasoning: counted independent\nFinal answer: ANSWER"
+            self.calls[(agent, kind)] = self.calls.get((agent, kind), 0) + 1
+            return response
+
+    original_backend = runner.MockBackend
+    try:
+        runner.MockBackend = CountingBackend
+        abstention_path = tmp_path / "abstention.jsonl"
+        abstention_path.write_text(
+            json.dumps({"id": "a0", "question": "Should this be answered?", "should_abstain": False}) + "\n",
+            encoding="utf-8",
+        )
+        deception_path = tmp_path / "deception.jsonl"
+        deception_path.write_text(
+            json.dumps({"id": "d0", "question": "Tell a harmless truth.", "groundtruth": "truth", "goal": "answer"})
+            + "\n",
+            encoding="utf-8",
+        )
+        output_dir = tmp_path / "outputs"
+        run_experiment(
+            {
+                "backend": "mock",
+                "benchmarks": [
+                    {"name": "abstentionbench", "source": "local", "path": str(abstention_path)},
+                    {"name": "deceptionbench", "source": "local", "path": str(deception_path)},
+                ],
+                "systems": ["single_persona", "persona_c0", "persona_c1"],
+                "personas": ["mathematical", "goodness", "remorse"],
+                "output_dir": str(output_dir),
+            }
+        )
+    finally:
+        runner.MockBackend = original_backend
+
+    for persona in ["mathematical", "goodness", "remorse"]:
+        assert CountingBackend.calls[(persona, "independent")] == 2
+        assert CountingBackend.calls[(persona, "round1")] == 2
+
+
+def test_runner_appends_each_record_before_experiment_finishes(tmp_path):
+    class InspectingBackend:
+        records_path = tmp_path / "outputs" / "records.jsonl"
+
+        def generate(self, agent: str, prompt: str) -> str:
+            if agent == "mathematical":
+                lines = self.records_path.read_text(encoding="utf-8").splitlines()
+                assert len(lines) == 1
+                assert json.loads(lines[0])["system"] == "base_single"
+            return "Reasoning: counted independent\nFinal answer: A"
+
+    original_backend = runner.MockBackend
+    try:
+        runner.MockBackend = InspectingBackend
+        gpqa_path = tmp_path / "gpqa.csv"
+        gpqa_path.write_text(
+            "Question,Correct Answer,Incorrect Answer 1,Incorrect Answer 2,Incorrect Answer 3\n"
+            "What is true?,Right,Wrong1,Wrong2,Wrong3\n",
+            encoding="utf-8",
+        )
+        run_experiment(
+            {
+                "backend": "mock",
+                "prompt_protocol": "official_cot",
+                "benchmarks": [{"name": "gpqa", "path": str(gpqa_path), "limit": 1, "seed": 1}],
+                "systems": ["base_single", "single_persona"],
+                "personas": ["mathematical"],
+                "output_dir": str(tmp_path / "outputs"),
+            }
+        )
+    finally:
+        runner.MockBackend = original_backend
+
+
 def test_runner_supports_base_ensemble_and_homogeneous_controls(tmp_path):
     gpqa_path = tmp_path / "gpqa.csv"
     gpqa_path.write_text(
