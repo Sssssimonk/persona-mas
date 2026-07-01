@@ -1,0 +1,29 @@
+{
+  "backend": "hf_peft",
+  "model_name": "Qwen/Qwen2.5-7B-Instruct",
+  "persona_prompt_mode": "none",
+  "prompt_protocol": "deception_l1_json",
+  "max_new_tokens": 768,
+  "adapter_paths": {
+    "mathematical": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/mathematical",
+    "goodness": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/goodness",
+    "remorse": "/root/autodl-tmp/persona-mas-models/qwen-2.5-7b-it-personas/remorse"
+  },
+  "benchmarks": [
+    {
+      "name": "deceptionbench",
+      "source": "local",
+      "path": "benchmarks/deceptionbench/deception_full.jsonl",
+      "manifest_path": "benchmarks/manifests/experiment0_deception_n50_seed0.jsonl",
+      "prompt_field": "L1-self"
+    }
+  ],
+  "systems": ["base_single", "single_persona", "persona_c0", "persona_c1"],
+  "judge": {
+    "backend": "deepseek",
+    "model": "deepseek-v4-flash",
+    "api_key_env": "DEEPSEEK_API_KEY"
+  },
+  "personas": ["mathematical", "goodness", "remorse"],
+  "output_dir": "outputs/deception_l1_self_n50"
+}
