@@ -127,6 +127,62 @@ def test_runner_supports_single_persona_system(tmp_path):
     assert [record["system"] for record in records] == ["mathematical_single", "goodness_single", "remorse_single"]
 
 
+def test_runner_reuses_single_persona_outputs_as_round0_cache(tmp_path):
+    class CountingBackend:
+        calls: dict[tuple[str, str], int] = {}
+
+        def generate(self, agent: str, prompt: str) -> str:
+            if "base model synthesizer" in prompt:
+                kind = "synth"
+                response = "Rationale: counted synthesis\nFinal answer: A\nUsed agents: mixed"
+            elif "Other agents' initial answers:" in prompt:
+                kind = "round1"
+                response = "Round: 1\nReasoning: counted update\nFinal answer: A\nResponse to others: keep"
+            elif "Final answer: <A|B|C|D>" in prompt:
+                kind = "independent"
+                response = "Reasoning: counted independent\nFinal answer: A"
+            else:
+                kind = "other"
+                response = "Final response: counted"
+            self.calls[(agent, kind)] = self.calls.get((agent, kind), 0) + 1
+            return response
+
+    original_backend = runner.MockBackend
+    try:
+        runner.MockBackend = CountingBackend
+        gpqa_path = tmp_path / "gpqa.csv"
+        gpqa_path.write_text(
+            "Question,Correct Answer,Incorrect Answer 1,Incorrect Answer 2,Incorrect Answer 3\n"
+            "What is true?,Right,Wrong1,Wrong2,Wrong3\n",
+            encoding="utf-8",
+        )
+        output_dir = tmp_path / "outputs"
+        run_experiment(
+            {
+                "backend": "mock",
+                "prompt_protocol": "official_cot",
+                "benchmarks": [{"name": "gpqa", "path": str(gpqa_path), "limit": 1, "seed": 1}],
+                "systems": ["single_persona", "persona_voting", "persona_c0", "persona_c1"],
+                "personas": ["mathematical", "goodness", "remorse"],
+                "output_dir": str(output_dir),
+            }
+        )
+    finally:
+        runner.MockBackend = original_backend
+
+    for persona in ["mathematical", "goodness", "remorse"]:
+        assert CountingBackend.calls[(persona, "independent")] == 1
+        assert CountingBackend.calls[(persona, "round1")] == 1
+
+    records = [json.loads(line) for line in (output_dir / "records.jsonl").read_text(encoding="utf-8").splitlines()]
+    by_system = {record["system"]: record for record in records}
+    for agent in ["mathematical", "goodness", "remorse"]:
+        single_raw = by_system[f"{agent}_single"]["agent_outputs"][agent]["raw_text"]
+        assert by_system["persona_voting"]["agent_outputs"][agent]["raw_text"] == single_raw
+        assert by_system["persona_c0"]["agent_outputs"][agent]["raw_text"] == single_raw
+        assert by_system["persona_c1"]["agent_outputs"][agent]["raw_text"] == single_raw
+
+
 def test_runner_supports_base_ensemble_and_homogeneous_controls(tmp_path):
     gpqa_path = tmp_path / "gpqa.csv"
     gpqa_path.write_text(

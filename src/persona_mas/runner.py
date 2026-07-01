@@ -94,15 +94,17 @@ def _single_record(
     persona_prompt_mode: str = "none",
     protocol: str = "strict",
     backend_agent: str | None = None,
+    output: AgentOutput | None = None,
 ) -> RunRecord:
-    output = _agent_call(
-        backend,
-        sample,
-        agent,
-        persona_prompt_mode=persona_prompt_mode,
-        protocol=protocol,
-        backend_agent=backend_agent,
-    )
+    if output is None:
+        output = _agent_call(
+            backend,
+            sample,
+            agent,
+            persona_prompt_mode=persona_prompt_mode,
+            protocol=protocol,
+            backend_agent=backend_agent,
+        )
     judge_output = _judge_if_needed(judge, sample, output.parsed)
     return RunRecord(
         benchmark=sample.benchmark,
@@ -334,6 +336,14 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
             )
         if "single_persona" in systems:
             for persona in personas:
+                if persona not in initial_cache:
+                    initial_cache[persona] = _agent_call(
+                        backend,
+                        sample,
+                        persona,
+                        persona_prompt_mode=persona_prompt_mode,
+                        protocol=prompt_protocol,
+                    )
                 records.append(
                     _single_record(
                         backend,
@@ -343,11 +353,20 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
                         judge,
                         persona_prompt_mode=persona_prompt_mode,
                         protocol=prompt_protocol,
+                        output=initial_cache[persona],
                     )
                 )
         for persona in personas:
             system_name = f"{persona}_single"
             if system_name in systems:
+                if persona not in initial_cache:
+                    initial_cache[persona] = _agent_call(
+                        backend,
+                        sample,
+                        persona,
+                        persona_prompt_mode=persona_prompt_mode,
+                        protocol=prompt_protocol,
+                    )
                 records.append(
                     _single_record(
                         backend,
@@ -357,6 +376,7 @@ def run_experiment(config: dict[str, Any]) -> dict[str, Any]:
                         judge,
                         persona_prompt_mode=persona_prompt_mode,
                         protocol=prompt_protocol,
+                        output=initial_cache[persona],
                     )
                 )
         if "persona_voting" in systems and sample.benchmark in {"gpqa", "abstentionbench"}:
