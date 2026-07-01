@@ -18,6 +18,7 @@ rsync -avz --delete \
   --exclude '.venv-abstention/' \
   --exclude 'data/' \
   --exclude 'logs/' \
+  --exclude 'analysis_examples/' \
   --exclude 'benchmarks/raw/' \
   --exclude 'benchmarks/abstentionbench/abstention_full.jsonl' \
   --exclude 'benchmarks/deceptionbench/deception_full.jsonl' \
@@ -39,6 +40,7 @@ rsync -avz --delete \
   --exclude 'outputs/deception_n100/' \
   --exclude 'outputs/gpqa_cot_full/' \
   --exclude 'outputs/gpqa_cot_n20/' \
+  --exclude 'outputs/gpqa_cot_n50/' \
   --exclude 'outputs/abstention_natural_n100/' \
   --exclude 'outputs/deception_l1_self_n100/' \
   --exclude 'outputs/protocol_v1_trial_gpqa_cot_n2/' \

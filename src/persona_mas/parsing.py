@@ -26,6 +26,20 @@ def _normalized_choice(value: str | None) -> str | None:
     return match.group(1) if match else None
 
 
+def _choice_near_label(text: str, label: str = "final answer") -> str | None:
+    label_pattern = re.escape(label)
+    patterns = [
+        rf"{label_pattern}\s*(?:remains\s+\w+\s*)?:\s*(?:\*\*)?\s*([ABCD])\b",
+        rf"^\s*(?:#+\s*)?(?:\*\*)?{label_pattern.title()}(?:\*\*)?\s*$\s*^\s*(?:\*\*)?\s*([ABCD])\b",
+        rf"^\s*(?:#+\s*)?(?:\*\*)?{label_pattern}(?:\*\*)?\s*$\s*^\s*(?:\*\*)?\s*([ABCD])\b",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+        if match:
+            return match.group(1).upper()
+    return None
+
+
 def _normalized_decision(value: str | None, allowed: set[str]) -> str | None:
     if not value:
         return None
@@ -111,7 +125,7 @@ def parse_debate_round_output(text: str) -> ParsedOutput:
             or None,
             raw_text=text,
         )
-    final_answer = _normalized_choice(_line_value(text, ["Final answer", "Final Answer"]))
+    final_answer = _normalized_choice(_line_value(text, ["Final answer", "Final Answer"])) or _choice_near_label(text)
     if final_answer is not None:
         return ParsedOutput(
             decision=final_answer,
@@ -147,7 +161,7 @@ def parse_synthesizer_output(text: str) -> ParsedOutput:
             or None,
             raw_text=text,
         )
-    final_answer = _normalized_choice(_line_value(text, ["Final answer", "Final Answer"]))
+    final_answer = _normalized_choice(_line_value(text, ["Final answer", "Final Answer"])) or _choice_near_label(text)
     if final_answer is not None:
         return ParsedOutput(
             decision=final_answer,

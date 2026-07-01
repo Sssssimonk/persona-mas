@@ -76,6 +76,18 @@ def test_parse_synthesizer_official_cot_output_extracts_final_answer():
     assert parsed.reason == "Agent A is most consistent."
 
 
+def test_parse_debate_round_output_extracts_final_answer_heading_next_line():
+    parsed = parse_debate_round_output("## Final Answer\nD\n\n## Response to Others\nI updated.")
+    assert parsed.decision == "D"
+    assert parsed.final_response == "D"
+
+
+def test_parse_debate_round_output_extracts_final_answer_sentence_variant():
+    parsed = parse_debate_round_output("My final answer remains unchanged: **B**\n\nThis is my conclusion.")
+    assert parsed.decision == "B"
+    assert parsed.final_response == "B"
+
+
 def test_parse_synthesizer_json_output_extracts_response():
     parsed = parse_synthesizer_output(
         '{"rationale": "mixed evidence", "response": "I cannot help with that.", "used_agents": "mixed"}'
